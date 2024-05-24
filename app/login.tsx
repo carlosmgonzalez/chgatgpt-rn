@@ -9,17 +9,28 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { defaultStyles } from "@/constants/Styles";
 import Colors from "@/constants/Colors";
-import { useSignUp } from "@clerk/clerk-expo";
+import { useSignIn, useSignUp } from "@clerk/clerk-expo";
+import { ErrorSignUp } from "@/interfaces/error-signup";
 
 export default function LoginScreen() {
   const { type } = useLocalSearchParams<{ type: string }>();
 
-  const { isLoaded, signUp, setActive } = useSignUp();
+  const {
+    isLoaded: isLoadedSignUp,
+    signUp,
+    setActive: setActiveSignUp,
+  } = useSignUp();
+  const {
+    isLoaded: isLoadedSignIn,
+    signIn,
+    setActive: setActiveSignIn,
+  } = useSignIn();
 
   const [loading, setLoading] = useState(false);
   const [emailAddress, setEmailAddress] = useState("");
@@ -29,7 +40,7 @@ export default function LoginScreen() {
   const [code, setCode] = useState("");
 
   const onSignUpPress = async () => {
-    if (!isLoaded) return;
+    if (!isLoadedSignUp) return;
 
     try {
       setLoading(true);
@@ -42,15 +53,16 @@ export default function LoginScreen() {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
 
       setPendingVerification(true);
-    } catch (error) {
+    } catch (error: any) {
       console.log(JSON.stringify(error, null, 2));
+      Alert.alert(error.errors[0].message);
     } finally {
       setLoading(false);
     }
   };
 
   const onPressVerify = async () => {
-    if (!isLoaded) return;
+    if (!isLoadedSignUp) return;
 
     try {
       setLoading(true);
@@ -59,7 +71,7 @@ export default function LoginScreen() {
         code,
       });
 
-      await setActive({ session: completeSignUp.createdSessionId });
+      await setActiveSignUp({ session: completeSignUp.createdSessionId });
     } catch (error) {
       console.log(JSON.stringify(error, null, 2));
     } finally {
@@ -67,7 +79,25 @@ export default function LoginScreen() {
     }
   };
 
-  const onLoginPress = async () => {};
+  const onLoginPress = async () => {
+    if (!isLoadedSignIn) return;
+
+    try {
+      setLoading(true);
+
+      const completeSignIn = await signIn.create({
+        identifier: emailAddress,
+        password,
+      });
+
+      await setActiveSignIn({ session: completeSignIn.createdSessionId });
+    } catch (error: any) {
+      console.log(error);
+      Alert.alert(error.errors[0].message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -90,6 +120,7 @@ export default function LoginScreen() {
         </Text>
         <View style={{ marginBottom: 30 }}>
           <TextInput
+            keyboardType="email-address"
             autoCapitalize="none"
             placeholder="Email"
             style={styles.inputField}
@@ -109,15 +140,25 @@ export default function LoginScreen() {
           <TouchableOpacity
             onPress={onLoginPress}
             style={[defaultStyles.btn, styles.btnPrimary]}
+            disabled={loading}
           >
-            <Text style={styles.btnPrimaryText}>Login</Text>
+            {loading ? (
+              <ActivityIndicator size={30} color="white" />
+            ) : (
+              <Text style={styles.btnPrimaryText}>Login</Text>
+            )}
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
             onPress={onSignUpPress}
             style={[defaultStyles.btn, styles.btnPrimary]}
+            disabled={loading}
           >
-            <Text style={styles.btnPrimaryText}>Create account</Text>
+            {loading ? (
+              <ActivityIndicator size={30} color="white" />
+            ) : (
+              <Text style={styles.btnPrimaryText}>Create account</Text>
+            )}
           </TouchableOpacity>
         )}
 
