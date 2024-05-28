@@ -35,7 +35,7 @@ const InitLayout = () => {
     const inHomeGroup = segments[0] === "(home)";
 
     if (isSignedIn && !inHomeGroup) {
-      router.replace("/(home)");
+      router.replace("/(home)/(drawer)/(chat)/new");
     } else if (!isSignedIn && inHomeGroup) {
       router.replace("/");
     }

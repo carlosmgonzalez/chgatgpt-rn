@@ -1,13 +1,104 @@
+import Colors from "@/constants/Colors";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
+import {
+  DrawerContentScrollView,
+  DrawerItemList,
+} from "@react-navigation/drawer";
+import { DrawerActions } from "@react-navigation/native";
+import { Link, useNavigation } from "expo-router";
 import { Drawer } from "expo-router/drawer";
-import { Image, StyleSheet, View } from "react-native";
+import {
+  Image,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const CustomDrawerContent = (props: any) => {
+  const { bottom, top } = useSafeAreaInsets();
+
+  return (
+    <View style={{ flex: 1, marginTop: top }}>
+      <View style={{ backgroundColor: "#fff", paddingBottom: 16 }}>
+        <View style={styles.searchSection}>
+          <Ionicons
+            style={styles.searchIcon}
+            name="search"
+            size={20}
+            color={Colors.greyLight}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Search"
+            underlineColorAndroid={"transparent"}
+          />
+        </View>
+      </View>
+      <DrawerContentScrollView
+        {...props}
+        contentContainerStyle={{ paddingTop: 0 }}
+      >
+        <DrawerItemList {...props} />
+      </DrawerContentScrollView>
+      <View style={{ padding: 16, paddingBottom: bottom + 16 }}>
+        <Link href="/(home)/(modal)/settings" asChild>
+          <TouchableOpacity style={styles.footer}>
+            <Image
+              source={{
+                uri: "https://lh3.googleusercontent.com/a/ACg8ocJiSJ0T_PKZFJItSSWMaEDYxYSWIWniPhb3PPgrPK0jbAleBvNH=s288-c-no",
+              }}
+              style={styles.avatar}
+            />
+            <Text style={styles.username}>Carlos Mario Gonzalez</Text>
+            <Ionicons
+              name="ellipsis-horizontal"
+              size={24}
+              color={Colors.greyLight}
+            />
+          </TouchableOpacity>
+        </Link>
+      </View>
+    </View>
+  );
+};
 
 export default function LayoutDrawer() {
+  const navigation = useNavigation();
+  const dimensions = useWindowDimensions();
+
   return (
-    <Drawer>
+    <Drawer
+      drawerContent={CustomDrawerContent}
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: Colors.light,
+        },
+        headerLeft: () => (
+          <TouchableOpacity
+            onPress={() => {
+              navigation.dispatch(DrawerActions.toggleDrawer);
+            }}
+            style={{ marginLeft: 15 }}
+          >
+            <FontAwesome6 name="grip-lines" size={25} color={Colors.grey} />
+          </TouchableOpacity>
+        ),
+        drawerActiveBackgroundColor: Colors.selected,
+        drawerActiveTintColor: "#000",
+        drawerInactiveTintColor: "#000",
+        drawerItemStyle: { borderRadius: 12 },
+        drawerLabelStyle: { marginLeft: -20 },
+        drawerStyle: { width: dimensions.width * 0.86 },
+        overlayColor: "rgba(0, 0, 0, 0.2)",
+      }}
+    >
       <Drawer.Screen
         name="(chat)/new"
         options={{
-          title: "New Chat",
+          title: "ChatGPT",
           drawerIcon: () => (
             <View style={[styles.item, { backgroundColor: "#000" }]}>
               <Image
@@ -16,10 +107,50 @@ export default function LayoutDrawer() {
               />
             </View>
           ),
+          headerRight: () => (
+            <Link href="/(home)/(drawer)/(chat)/new" push asChild>
+              <TouchableOpacity>
+                <Ionicons
+                  name="create-outline"
+                  size={24}
+                  color={Colors.grey}
+                  style={{ marginRight: 16 }}
+                />
+              </TouchableOpacity>
+            </Link>
+          ),
         }}
       />
-      <Drawer.Screen name="dalle" options={{ title: "hola" }} />
-      <Drawer.Screen name="explore" />
+      <Drawer.Screen
+        name="dalle"
+        options={{
+          title: "Dall-E",
+          drawerIcon: () => (
+            <View style={styles.item}>
+              <Image
+                source={require("@/assets/images/dalle.png")}
+                style={styles.dalleImage}
+              />
+            </View>
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="explore"
+        options={{
+          title: "Explore GPTs",
+          drawerIcon: () => (
+            <View style={styles.item}>
+              <Ionicons
+                name="apps-outline"
+                size={25}
+                color="#000"
+                style={{ margin: 6 }}
+              />
+            </View>
+          ),
+        }}
+      />
     </Drawer>
   );
 }
@@ -33,5 +164,46 @@ const styles = StyleSheet.create({
   item: {
     borderRadius: 15,
     overflow: "hidden",
+  },
+  dalleImage: {
+    width: 36,
+    height: 36,
+    resizeMode: "cover",
+  },
+  searchSection: {
+    marginHorizontal: 10,
+    marginTop: 5,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: Colors.input,
+    borderRadius: 10,
+    height: 42,
+  },
+  searchIcon: {
+    padding: 6,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingBottom: 8,
+    paddingLeft: 0,
+    alignItems: "center",
+    color: "#424242",
+  },
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+  },
+  username: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
