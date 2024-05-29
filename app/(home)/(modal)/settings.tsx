@@ -15,25 +15,26 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 export default function SettingsScreen() {
+  const { signOut } = useAuth();
+  const router = useRouter();
+
   const [key, setKey] = useMMKVString("apiKey", storage);
   const [org, setOrg] = useMMKVString("org", storage);
 
-  const [keyInp, setKeyInp] = useState(key);
-  const [orgInp, setOrgInp] = useState(org);
-
-  const { signOut } = useAuth();
-
-  const router = useRouter();
+  const [apiKey, setApiKey] = useState(key || "");
+  const [organization, setOrganization] = useState(org || "");
 
   const saveApiKey = () => {
-    setKey(keyInp);
-    setOrg(orgInp);
+    setKey(apiKey);
+    setOrg(organization);
     router.navigate("/(home)/(drawer)/(chat)/new");
   };
 
   const removeApiKey = () => {
     setKey("");
     setOrg("");
+    setApiKey("");
+    setOrganization("");
   };
 
   return (
@@ -54,16 +55,16 @@ export default function SettingsScreen() {
           <Text style={styles.label}>API Key & Organization:</Text>
           <TextInput
             style={styles.input}
-            value={keyInp}
-            onChangeText={setKeyInp}
+            value={apiKey}
+            onChangeText={setApiKey}
             placeholder="Enter your API key"
             autoCorrect={false}
             autoCapitalize="none"
           />
           <TextInput
             style={styles.input}
-            value={orgInp}
-            onChangeText={setOrgInp}
+            value={organization}
+            onChangeText={setOrganization}
             placeholder="Enter your organization"
             autoCorrect={false}
             autoCapitalize="none"

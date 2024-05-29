@@ -6,22 +6,19 @@ import {
 } from "@/components";
 import { defaultStyles } from "@/constants/Styles";
 import { Message, Role } from "@/utils/Interfaces";
-import { useAuth } from "@clerk/clerk-expo";
 import { Redirect, Stack } from "expo-router";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
-  Text,
-  Button,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Image,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useMMKVString } from "react-native-mmkv";
 import { storage } from "@/utils/Storage";
+import OpenAI from "react-native-openai";
 
 const DUMMY_MESSAGES: Message[] = [
   {
@@ -79,20 +76,70 @@ const DUMMY_MESSAGES: Message[] = [
 ];
 
 export default function DrawerScreen() {
-  const { signOut } = useAuth();
-  const [messages, setMessages] = useState<Message[]>(DUMMY_MESSAGES);
+  const [messages, setMessages] = useState<Message[]>([]);
 
-  const [key, setKey] = useMMKVString("apiKey", storage);
+  const [apiKey, setApiKey] = useMMKVString("apiKey", storage);
   const [organization, setOrganization] = useMMKVString("org", storage);
   const [gptVersion, setGptVersion] = useMMKVString("gptVersion", storage);
 
-  if (!key || key === "" || !organization || organization === "") {
+  // const scrollViewRef = useRef<FlashList<Message> | null>(null);
+
+  // useEffect(() => {
+  //   if (scrollViewRef.current) {
+  //     scrollViewRef.current.scrollToEnd({ animated: true });
+  //   }
+  // }, [messages]);
+
+  if (!apiKey || apiKey === "" || !organization || organization === "") {
     return <Redirect href="/(home)/(modal)/settings" />;
   }
 
+  const openAI = useMemo(() => new OpenAI({ apiKey, organization }), []);
+
   const getCompletion = async (message: string) => {
-    console.log(message);
+    if (message.length === 0) return;
+
+    setMessages([
+      ...messages,
+      { role: Role.User, content: message },
+      { role: Role.Bot, content: "" },
+    ]);
+
+    openAI.chat.stream({
+      messages: [
+        {
+          role: "user",
+          content: message,
+        },
+      ],
+      model: gptVersion === "3.5" ? "gpt-3.5-turbo" : "gpt-4",
+    });
   };
+
+  useEffect(() => {
+    openAI.chat.addListener("onChatMessageReceived", (payload) => {
+      console.log("Received message", payload);
+      setMessages((prevMessages) => {
+        const newMessage = payload.choices[0].delta.content;
+        const lastMessageBot = prevMessages.at(-1);
+
+        if (newMessage) {
+          lastMessageBot!.content += newMessage;
+          return [...prevMessages];
+        }
+
+        if (payload.choices[0].finishReason) {
+          console.log("Stream ended");
+        }
+
+        return prevMessages;
+      });
+    });
+
+    return () => {
+      openAI.chat.removeListener("onChatMessageReceived");
+    };
+  }, [openAI, messages]);
 
   return (
     <View style={defaultStyles.pageContainer}>
@@ -131,12 +178,15 @@ export default function DrawerScreen() {
             </View>
           </View>
         )}
-        <FlashList
-          data={messages}
-          renderItem={({ item }) => <ChatMessage {...item} />}
-          estimatedItemSize={400}
-          // keyboardDismissMode="on-drag"
-        />
+        {messages.length > 0 && (
+          <FlashList
+            // ref={scrollViewRef}
+            data={messages}
+            renderItem={({ item }) => <ChatMessage {...item} />}
+            estimatedItemSize={400}
+            // keyboardDismissMode="on-drag"
+          />
+        )}
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
