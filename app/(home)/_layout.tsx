@@ -1,15 +1,17 @@
 import Colors from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as SQLite from "expo-sqlite";
+import { SQLiteProvider } from "expo-sqlite";
+import { migrateDbIfNeeded } from "@/utils/Database";
 
 export default function LayoutHome() {
-  const { top } = useSafeAreaInsets();
   const router = useRouter();
 
   return (
-    <View style={{ flex: 1 }}>
+    <SQLiteProvider databaseName="chatgpt.db" onInit={migrateDbIfNeeded}>
       <Stack>
         <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
         <Stack.Screen
@@ -26,7 +28,27 @@ export default function LayoutHome() {
             ),
           }}
         />
+        <Stack.Screen
+          name="(modal)/image/[url]"
+          options={{
+            headerTitle: "",
+            presentation: "fullScreenModal",
+            headerBlurEffect: "dark",
+            headerStyle: { backgroundColor: "rgba(0,0,0,0.4)" },
+            headerTransparent: true,
+            headerShadowVisible: false,
+            headerLeft: () => (
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={{ borderRadius: 20, padding: 4 }}
+              >
+                <Ionicons name="close-outline" size={28} color={"#fff"} />
+              </TouchableOpacity>
+            ),
+          }}
+        />
       </Stack>
-    </View>
+      <StatusBar style="dark" backgroundColor="white" />
+    </SQLiteProvider>
   );
 }

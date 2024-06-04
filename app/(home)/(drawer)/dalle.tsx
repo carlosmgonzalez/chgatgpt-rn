@@ -27,8 +27,8 @@ const DUMMY_MESSAGES = [
     role: Role.Bot,
     content: "",
     imageUrl: "https://galaxies.dev/img/meerkat_2.jpg",
-    prompt:
-      "But I must explain to you how all this mistaken idea of denouncing pleasure and praising pain was born and I will give you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness.  ",
+    prompt: `But I must explain to you how all this mistaken idea of denouncing pleasure and praising pain was born and I will give you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness. 
+      But I must explain to you how all this mistaken idea of denouncing pleasure and praising pain was born and I will give you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness.`,
   },
 ];
 
@@ -61,16 +61,20 @@ export default function DalleScreen() {
 
     setMessages([...messages, { role: Role.User, content: message }]);
 
-    const result = await openAI.image.create({
-      prompt: message,
-    });
+    try {
+      const result = await openAI.image.create({
+        prompt: message,
+      });
 
-    if (result.data && result.data.length > 0) {
-      const imageUrl = result.data[0].url;
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { role: Role.Bot, imageUrl, content: "", prompt: message },
-      ]);
+      if (result.data && result.data.length > 0) {
+        const imageUrl = result.data[0].url;
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { role: Role.Bot, imageUrl, content: "", prompt: message },
+        ]);
+      }
+    } catch (error) {
+      console.log(error);
     }
 
     setWorking(false);

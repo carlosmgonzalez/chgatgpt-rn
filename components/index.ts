@@ -4,3 +4,4 @@ export * from "./HeaderDropDown";
 export * from "./MessageInput";
 export * from "./MessageIdeas";
 export * from "./ChatMessage";
+export * from "./DropDownMenu";

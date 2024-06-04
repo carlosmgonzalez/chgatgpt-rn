@@ -1,8 +1,12 @@
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter, useSegments } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  View,
+  useColorScheme,
+} from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SecureStore from "expo-secure-store";
 import { useEffect } from "react";
@@ -71,6 +75,8 @@ const InitLayout = () => {
 };
 
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
+
   return (
     <ClerkProvider
       publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
@@ -78,7 +84,6 @@ export default function RootLayout() {
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
         <InitLayout />
-        <StatusBar style="dark" />
       </GestureHandlerRootView>
     </ClerkProvider>
   );
